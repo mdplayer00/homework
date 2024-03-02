@@ -1,0 +1,42 @@
+import sqlite3
+
+class ORM:
+    def __init__(self, table_name):
+        self.conn = sqlite3.connect('database.db')
+        self.cursor = self.conn.cursor()
+        self.table_name = table_name
+    
+    def select(self, columns='*', where=None):
+        query = f"SELECT {columns} FROM {self.table_name}"
+        if where:
+            query += f" WHERE {where}"
+        
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
+    
+    def insert(self, columns, values):
+        query = f"INSERT INTO {self.table_name} ({columns}) VALUES ({', '.join(['?' for _ in values])})"
+        self.cursor.execute(query, values)
+        self.conn.commit()
+    
+    def update(self, set_values, where):
+        query = f"UPDATE {self.table_name} SET {set_values} WHERE {where}"
+        self.cursor.execute(query)
+        self.conn.commit()
+    
+    def delete(self, where):
+        query = f"DELETE FROM {self.table_name} WHERE {where}"
+        self.cursor.execute(query)
+        self.conn.commit()
+    
+    def __del__(self):
+        self.conn.close()
+
+# Usage example
+orm = ORM('users')
+orm.insert('name, age, email', ('John Doe', 30, 'john.doe@example.com'))
+print(orm.select())
+orm.update("age=35", "name='John Doe'")
+print(orm.select())
+orm.delete("name='John Doe'")
+print(orm.select())
